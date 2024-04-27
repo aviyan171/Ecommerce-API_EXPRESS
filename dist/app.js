@@ -4,4 +4,3 @@ const app = express();
 app.listen(port, () => {
     console.log(`Server is working on ${port}`);
 });
-console.log('hi');
