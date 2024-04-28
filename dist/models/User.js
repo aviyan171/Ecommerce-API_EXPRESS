@@ -21,12 +21,12 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: convertObjectToArray({ data: EROLE }),
-        default: 'user',
+        enum: convertObjectToArray({ data: EROLE, extract: 'values' }),
+        default: EROLE.USER,
     },
     gender: {
         type: String,
-        enum: convertObjectToArray({ data: EGender }),
+        enum: convertObjectToArray({ data: EGender, extract: 'values' }),
         required: [true, ADD_GENDER],
     },
     dob: {
@@ -38,4 +38,4 @@ userSchema.virtual('age').get(function () {
     const dob = this.dob;
     return getAge({ dob });
 });
-export const User = createModel({ modelName: 'User', schema: userSchema });
+export const UserModel = createModel({ modelName: 'User', schema: userSchema });

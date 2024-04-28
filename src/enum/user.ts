@@ -1,6 +1,6 @@
 export enum EGender {
-  MALE = 'Male',
-  FEMALE = 'Female',
+  MALE = 'male',
+  FEMALE = 'female',
 }
 export enum EROLE {
   ADMIN = 'admin',
