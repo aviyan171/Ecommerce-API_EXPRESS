@@ -1,7 +1,7 @@
 export var EGender;
 (function (EGender) {
-    EGender["MALE"] = "Male";
-    EGender["FEMALE"] = "Female";
+    EGender["MALE"] = "male";
+    EGender["FEMALE"] = "female";
 })(EGender || (EGender = {}));
 export var EROLE;
 (function (EROLE) {

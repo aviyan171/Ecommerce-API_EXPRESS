@@ -13,3 +13,12 @@ export type TUser = {
   //virtual attribute
   age: number
 } & Document
+
+export type TNewUserRequestBody = {
+  name: string
+  email: string
+  photo: string
+  gender: string
+  _id: string
+  dob: Date
+}
