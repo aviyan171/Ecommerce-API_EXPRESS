@@ -9,7 +9,7 @@ import { TNewUserRequestBody } from '../types/user.js'
 import { customResponse, errorResponse } from '../utils/common.js'
 
 const { WELCOME, FETCH_SUCCESSFUL, REMOVED_SUCCESSFUL } = COMMON_MESSAGES
-const { ADD_ALL_FIELDS, ADD_ID } = VALIDATION_MESSAGES
+const { ADD_ALL_FIELDS } = VALIDATION_MESSAGES
 const { INVALID } = ERROR_MESSAGES
 
 export const newUser: ControllerType = TryCatch(async (req: Request<{}, {}, TNewUserRequestBody>, res, next) => {
@@ -37,4 +37,6 @@ export const deleteUser: ControllerType = TryCatch(async (req, res, next) => {
   const { id } = req.params
   const user = await UserModel.findById(id)
   if (!user) return errorResponse({ message: INVALID.replace('{{name}}', 'id'), next })
+  await user.deleteOne()
+  return customResponse({ res, message: REMOVED_SUCCESSFUL.replace('{{name}}', 'user') })
 })

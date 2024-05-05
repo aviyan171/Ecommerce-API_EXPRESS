@@ -16,6 +16,6 @@ export const isAdmin = (accessType?: string) =>
     const user = await UserModel.findById(id)
     if (!user) return errorResponse({ next, message: INVALID.replace('{{name}}', 'id') })
     if (user.role !== EROLE.ADMIN)
-      return errorResponse({ next, message: ADMIN_ACCESS.replace('{{things}}', accessType || '') })
+      return errorResponse({ next, message: ADMIN_ACCESS.replace('{{things}}', accessType || ''), statusCode: 401 })
     next()
   })
