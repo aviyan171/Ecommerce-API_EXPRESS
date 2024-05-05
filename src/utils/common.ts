@@ -1,6 +1,9 @@
 import { EnumType } from 'typescript'
 import { ResponseType } from '../types/common.js'
 
+/**
+ * Helper function for converting array into object
+ */
 export const convertObjectToArray = (args: { data: EnumType | Object; extract?: 'keys' | 'values' | 'entries' }) => {
   const { data, extract } = args
   if (extract === 'keys') return Object.keys(data)
@@ -9,7 +12,10 @@ export const convertObjectToArray = (args: { data: EnumType | Object; extract?: 
   return Object.keys(data)
 }
 
-export const customResponse = <T>({ success = true, statusCode = 201, res, message, data }: ResponseType<T>) => {
+/**
+ * Helper function for creating a response
+ */
+export const customResponse = <T>({ success = true, statusCode = 200, res, message, data }: ResponseType<T>) => {
   return res.status(statusCode).json({
     success,
     message,
