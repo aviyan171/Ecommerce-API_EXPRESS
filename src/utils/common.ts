@@ -1,5 +1,7 @@
+import { NextFunction } from 'express'
 import { EnumType } from 'typescript'
 import { ResponseType } from '../types/common.js'
+import { ErrorHandler } from './utility-class.js'
 
 /**
  * Helper function for converting array into object
@@ -21,4 +23,16 @@ export const customResponse = <T>({ success = true, statusCode = 200, res, messa
     message,
     ...(data && { data }),
   })
+}
+
+export const errorResponse = ({
+  next,
+  message,
+  statusCode = 400,
+}: {
+  next: NextFunction
+  message: string
+  statusCode?: number
+}) => {
+  return next(new ErrorHandler(message, statusCode))
 }
