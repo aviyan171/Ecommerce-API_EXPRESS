@@ -1,5 +1,6 @@
 import express from 'express'
 import { errorMiddleWare } from './middlewares/error.js'
+import { productRouter } from './routes/product.js'
 import { userRouter } from './routes/user.js'
 import { connectDB } from './utils/mongoose.js'
 
@@ -15,6 +16,10 @@ connectDB()
 
 //using Routes
 app.use('/api/v1/user', userRouter)
+app.use('/api/v1/product', productRouter)
+
+//static
+app.use('/uploads', express.static('uploads'))
 
 //error middleware
 app.use(errorMiddleWare)
