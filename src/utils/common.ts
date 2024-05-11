@@ -25,6 +25,9 @@ export const customResponse = <T>({ success = true, statusCode = 200, res, messa
   })
 }
 
+/**
+ * Helper function for throwing a error
+ */
 export const errorResponse = ({
   next,
   message,
