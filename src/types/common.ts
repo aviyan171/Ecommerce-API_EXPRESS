@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
+import { Document, Types } from 'mongoose'
 
 export type ControllerType = (
   req: Request,
@@ -13,3 +14,8 @@ export type ResponseType<T> = {
   message: string
   data?: T
 }
+
+export type genericDocument<T> = Document<unknown, {}, T> &
+  T & {
+    _id: Types.ObjectId
+  }

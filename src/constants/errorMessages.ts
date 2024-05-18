@@ -3,4 +3,5 @@ export const ERROR_MESSAGES = {
   INVALID: 'Invalid {{name}}',
   LOGIN_FIRST: 'Please login first',
   ADMIN_ACCESS: 'Only admin has the access to {{things}}',
+  NOT_FOUND: '{{name}} not found',
 }
