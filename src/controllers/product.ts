@@ -6,7 +6,7 @@ import { VALIDATION_MESSAGES } from '../constants/validatonMessages.js'
 import { TryCatch } from '../middlewares/error.js'
 import { ProductModel } from '../models/Product.js'
 import { ControllerType, genericDocument } from '../types/common.js'
-import { Product, ProductRequestBody } from '../types/poduct.js'
+import { Product, ProductBaseQuery, ProductRequestBody, ProductSearchQuery } from '../types/poduct.js'
 import { customResponse, errorResponse } from '../utils/common.js'
 
 const { CREATE, FETCH_SUCCESSFUL, REMOVED_SUCCESSFUL, UPDATE_SUCCESSFUL } = COMMON_MESSAGES
@@ -116,5 +116,42 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
     message: REMOVED_SUCCESSFUL.replace('{{name}}', 'Product'),
     res,
     data: { id: product.id },
+  })
+})
+
+export const searchProducts = TryCatch(async (req: Request<{}, {}, {}, ProductSearchQuery>, res, next) => {
+  const { category, keyword, price, sort } = req.query
+  const page = Number(req.query.page) || 1
+  const limit = 8
+  const skip = limit * (page - 1)
+  const baseQuery: ProductBaseQuery = {}
+  if (keyword) {
+    baseQuery.name = {
+      $regex: keyword,
+      $options: 'i',
+    }
+  }
+  if (price) {
+    baseQuery.price = {
+      $lte: Number(price),
+    }
+  }
+  if (category) baseQuery.category = category
+
+  const [products, filteredOnlyProduct] = await Promise.all([
+    ProductModel.find(baseQuery)
+      .sort(sort ? { price: sort === 'asc' ? 1 : -1 } : undefined)
+      .limit(limit)
+      .skip(skip),
+    ProductModel.find(baseQuery),
+  ])
+  const totalPage = Math.ceil(filteredOnlyProduct.length / limit)
+  return customResponse({
+    res,
+    message: FETCH_SUCCESSFUL.replace('{{name}}', 'Products'),
+    data: {
+      totalPage,
+      rows: products,
+    },
   })
 })
