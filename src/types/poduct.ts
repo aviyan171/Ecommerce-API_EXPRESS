@@ -14,3 +14,20 @@ export type ProductRequestBody = Omit<TNewUserRequestBody, 'dob' | 'gender' | 'e
   category: string
   price: number
 }
+
+export type ProductSearchQuery = {
+  keyword?: string
+  price?: string
+  category?: string
+  sort?: string
+  page?: string
+}
+
+export type ProductBaseQuery = {
+  name?: {
+    $regex: string
+    $options: string
+  }
+  price?: { $lte: number }
+  category?: string
+}
