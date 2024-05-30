@@ -1,0 +1,86 @@
+Essential Attributes:
+
+type: (Required) This defines the data type of the field. Valid options include:
+
+String: Stores text data.
+Number: Stores numerical values.
+Boolean: Stores true or false values.
+Date: Stores date/time information.
+ObjectID: Creates a unique identifier for the document (often used for _id).
+Array: Holds an array of values of any type.
+ObjectId: Creates a Mongoose-specific ObjectID for custom use.
+Buffer: Stores binary data.
+You can also use custom Mongoose schema types (e.g., for enums, references).
+required: (Optional) This enforces that the field must have a value when creating or updating a document. It can be a boolean (true for required) or an array containing an error message (optional).
+
+Commonly Used Attributes:
+
+unique: (Optional) This ensures that no two documents in the collection can have the same value for this field. You can use a boolean (true for unique) or an array containing an error message (optional).
+default: (Optional) This sets a default value for the field if none is provided during creation or update.
+index: (Optional) This creates an index on the field, which can improve query performance. You can use a boolean (true for index) or an object to customize the index (e.g., { unique: true }).
+sparse: (Optional) This specifies that the index can have documents with missing values for this field. Used with index: true for sparse indexes.
+trim: (Optional) This removes leading and trailing whitespace when storing string values. You can use a boolean (true for trimming) or an object for customization (e.g., { trim: true, side: 'both' }).
+lowercase: (Optional) This automatically converts string values to lowercase when storing.
+uppercase: (Optional) This automatically converts string values to uppercase when storing.
+ref: (Optional) This creates a reference to another Mongoose model (often used for relationships like one-to-many or many-to-many).
+select: (Optional) This controls whether the field is included in query results by default (can be false to exclude or an object for customization).
+populate: (Optional) This automatically populates referenced documents when querying (often used with ref).
+get: (Optional) This defines a getter function that modifies the retrieved value before returning it.
+set: (Optional) This defines a setter function that modifies the value before storing it.
+validate: (Optional) This specifies a validation function to ensure the field's data meets specific requirements.
+
+.......................................................................................................................
+const mongoose = require('mongoose');
+
+const { Schema } = mongoose;
+
+// Define the schema
+const userSchema = new Schema({
+  username: {
+    type: String,
+    required: [true, 'Username is required.'],
+    unique: true,
+    trim: true,
+    lowercase: true,
+    index: true
+  },
+  email: {
+    type: String,
+    required: [true, 'Email is required.'],
+
+    unique: true,
+    trim: true,
+    lowercase: true,
+    index: true,
+    Enum:[1,2]
+    validate: {
+      validator: (value) => {
+        // Basic email validation
+        return /\S+@\S+\.\S+/.test(value);
+      },
+      message: 'Invalid email format.'
+    }
+  },
+  age: {
+    type: Number,
+    default: 18,
+    min: [13, 'User must be at least 13 years old.']
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
+  },
+  registrationDate: {
+    type: Date,
+    default: Date.now
+  },
+  posts: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Post'
+  }]
+});
+
+// Create the model
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;
