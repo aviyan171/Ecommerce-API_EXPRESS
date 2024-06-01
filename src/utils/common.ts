@@ -2,6 +2,8 @@ import { NextFunction } from 'express'
 import { EnumType } from 'typescript'
 import { ResponseType } from '../types/common.js'
 import { ErrorHandler } from './utility-class.js'
+import { nodeCache } from '../app.js'
+import { ProductModel } from '../models/Product.js'
 
 /**
  * Helper function for converting array into object
@@ -38,4 +40,27 @@ export const errorResponse = ({
   statusCode?: number
 }) => {
   return next(new ErrorHandler(message, statusCode))
+}
+
+export const inValidateCache = async ({
+  products,
+  admin,
+  orders,
+}: {
+  products?: boolean
+  orders?: boolean
+  admin?: boolean
+}) => {
+  if (products) {
+    const productsKeys: string[] = ['latest-products', 'categories']
+    const productId = await ProductModel.find({}).select('_id')
+    productId.forEach((i) => {
+      productsKeys.push(`products - ${i._id}`)
+    })
+    nodeCache.del(productsKeys)
+  }
+  if (admin) {
+  }
+  if (orders) {
+  }
 }
