@@ -3,6 +3,7 @@ import { errorMiddleWare } from './middlewares/error.js'
 import { productRouter } from './routes/product.js'
 import { userRouter } from './routes/user.js'
 import { connectDB } from './utils/mongoose.js'
+import NodeCache from 'node-cache'
 
 const port = 4000
 
@@ -13,6 +14,9 @@ app.use(express.json()) //used for accessing json data
 
 //connect DB
 connectDB()
+
+//node-cache
+export const nodeCache = new NodeCache()
 
 //using Routes
 app.use('/api/v1/user', userRouter)

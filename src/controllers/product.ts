@@ -7,7 +7,8 @@ import { TryCatch } from '../middlewares/error.js'
 import { ProductModel } from '../models/Product.js'
 import { ControllerType, genericDocument } from '../types/common.js'
 import { Product, ProductBaseQuery, ProductRequestBody, ProductSearchQuery } from '../types/poduct.js'
-import { customResponse, errorResponse } from '../utils/common.js'
+import { customResponse, errorResponse, inValidateCache } from '../utils/common.js'
+import { nodeCache } from '../app.js'
 
 const { CREATE, FETCH_SUCCESSFUL, REMOVED_SUCCESSFUL, UPDATE_SUCCESSFUL } = COMMON_MESSAGES
 const { ADD_PHOTO, ADD_ALL_FIELDS } = VALIDATION_MESSAGES
@@ -33,6 +34,9 @@ export const addNewProduct: ControllerType = TryCatch(async (req: Request<{}, {}
     photo: photos.map((i) => i.path),
   }
   const newProducts = await ProductModel.create(data)
+
+  await inValidateCache({ products: true })
+
   return customResponse<ProductRequestBody>({
     statusCode: 201,
     message: CREATE.replace('{{name}}', 'Product'),
@@ -44,8 +48,15 @@ export const addNewProduct: ControllerType = TryCatch(async (req: Request<{}, {}
 export const getLatestProduct = ({ isAdmin }: { isAdmin: boolean }): ControllerType =>
   TryCatch(async (req: Request<{}, {}, ProductRequestBody>, res) => {
     let products
-    if (!isAdmin) products = await ProductModel.find({}).sort({ createdAt: -1 }).limit(5)
-    if (isAdmin) products = await ProductModel.find({})
+
+    if (nodeCache.has('latest-products')) {
+      products = JSON.parse(nodeCache.get('latest-products') as string)
+    } else {
+      if (!isAdmin) products = await ProductModel.find({}).sort({ createdAt: -1 }).limit(5)
+      if (isAdmin) products = await ProductModel.find({})
+      nodeCache.set('latest-products', JSON.stringify(products))
+    }
+
     return customResponse({
       statusCode: 200,
       message: FETCH_SUCCESSFUL.replace('{{name}}', 'Latest product'),
@@ -55,7 +66,14 @@ export const getLatestProduct = ({ isAdmin }: { isAdmin: boolean }): ControllerT
   })
 
 export const getAllCategories: ControllerType = TryCatch(async (_req, res) => {
-  const categories = await ProductModel.distinct('category')
+  let categories
+  if (nodeCache.has('categories')) {
+    categories = JSON.parse(nodeCache.get('categories') as string)
+  } else {
+    categories = await ProductModel.distinct('category')
+    nodeCache.set('categories', JSON.stringify(categories))
+  }
+
   return customResponse({
     res,
     data: categories,
@@ -65,8 +83,16 @@ export const getAllCategories: ControllerType = TryCatch(async (_req, res) => {
 
 export const getProductDetails: ControllerType = TryCatch(async (req, res, next) => {
   const { id } = req.params
-  const productDetails = await ProductModel.findById(id)
-  if (!productDetails) return errorResponse({ next, message: NOT_FOUND.replace('{{name}}', 'Product') })
+  let productDetails
+
+  if (nodeCache.has(`products-${id}`)) {
+    productDetails = JSON.parse(nodeCache.get(`products-${id}`) as string)
+  } else {
+    productDetails = await ProductModel.findById(id)
+    if (!productDetails) return errorResponse({ next, message: NOT_FOUND.replace('{{name}}', 'Product') })
+    nodeCache.set(`products-${id}`, JSON.stringify(productDetails))
+  }
+
   return customResponse({
     message: FETCH_SUCCESSFUL.replace('{{name}}', 'Products'),
     res,
@@ -96,6 +122,9 @@ export const updateProduct: ControllerType = TryCatch(async (req, res, next) => 
     }
   })
   await product.save()
+
+  await inValidateCache({ products: true })
+
   return customResponse<ProductRequestBody>({
     statusCode: 200,
     message: UPDATE_SUCCESSFUL.replace('{{name}}', 'Product'),
@@ -111,6 +140,9 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
     rm(i, () => console.log(REMOVED_SUCCESSFUL.replace('{{name}}', 'Old Photos')))
   })
   await ProductModel.deleteOne()
+
+  await inValidateCache({ products: true })
+
   return customResponse({
     statusCode: 200,
     message: REMOVED_SUCCESSFUL.replace('{{name}}', 'Product'),
