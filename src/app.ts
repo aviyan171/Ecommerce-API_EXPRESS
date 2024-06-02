@@ -4,16 +4,25 @@ import { productRouter } from './routes/product.js'
 import { userRouter } from './routes/user.js'
 import { connectDB } from './utils/mongoose.js'
 import NodeCache from 'node-cache'
+import { orderRouter } from './routes/orders.js'
+import { config } from 'dotenv'
+import morgan from 'morgan'
 
-const port = 4000
+config({
+  path: './.env',
+})
+
+const port = process.env.PORT
+const mongoUri = process.env.MONGO_URI as string
 
 const app = express()
 
 //middleware
 app.use(express.json()) //used for accessing json data
+app.use(morgan('dev'))
 
 //connect DB
-connectDB()
+connectDB(mongoUri)
 
 //node-cache
 export const nodeCache = new NodeCache()
@@ -21,6 +30,7 @@ export const nodeCache = new NodeCache()
 //using Routes
 app.use('/api/v1/user', userRouter)
 app.use('/api/v1/product', productRouter)
+app.use('/api/v1/order', orderRouter)
 
 //static
 app.use('/uploads', express.static('uploads'))
