@@ -4,6 +4,8 @@ import { ResponseType } from '../types/common.js'
 import { ErrorHandler } from './utility-class.js'
 import { nodeCache } from '../app.js'
 import { ProductModel } from '../models/Product.js'
+import { OrderItem } from '../types/order.js'
+import { ERROR_MESSAGES } from '../constants/errorMessages.js'
 
 /**
  * Helper function for converting array into object
@@ -42,6 +44,9 @@ export const errorResponse = ({
   return next(new ErrorHandler(message, statusCode))
 }
 
+/**
+ * Helper function for invalidate cache
+ */
 export const inValidateCache = async ({
   products,
   admin,
@@ -62,5 +67,25 @@ export const inValidateCache = async ({
   if (admin) {
   }
   if (orders) {
+  }
+}
+
+export const reduceStock = async (orderItems: OrderItem[]) => {
+  for (let index = 0; index < orderItems.length; index++) {
+    const order = orderItems[index]
+    const product = await ProductModel.findById(order.productId)
+    if (!product) throw new ErrorHandler(ERROR_MESSAGES.NOT_FOUND.replace('{{name}}', 'Product'), 400)
+    product.stock = product.stock - order.quantity
+    await product.save()
+  }
+}
+
+export const isStockEmpty = async (orderItems: OrderItem[]) => {
+  for (let index = 0; index < orderItems.length; index++) {
+    const order = orderItems[index]
+    const product = await ProductModel.findById(order.productId)
+    if (!product) return true
+    if (order.quantity > product.stock) return true
+    return false
   }
 }
