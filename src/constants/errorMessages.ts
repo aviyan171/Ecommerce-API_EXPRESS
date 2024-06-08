@@ -4,4 +4,5 @@ export const ERROR_MESSAGES = {
   LOGIN_FIRST: 'Please login first',
   ADMIN_ACCESS: 'Only admin has the access to {{things}}',
   NOT_FOUND: '{{name}} not found',
+  EMPTY_STOCK: 'Stock empty',
 }
