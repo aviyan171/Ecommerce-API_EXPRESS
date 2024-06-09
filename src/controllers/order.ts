@@ -7,6 +7,7 @@ import { COMMON_MESSAGES } from '../constants/commonMessages.js'
 import { VALIDATION_MESSAGES } from '../constants/validatonMessages.js'
 import { ERROR_MESSAGES } from '../constants/errorMessages.js'
 import { nodeCache } from '../app.js'
+import { ESTATUS } from '../enum/order.js'
 
 export const newOrder = TryCatch(async (req: Request<{}, {}, OrderTRquestBody>, res, next) => {
   const { shippingInfo, orderItems, user, subtotal, tax, shippingCharges, discount, total } = req.body
@@ -24,7 +25,7 @@ export const newOrder = TryCatch(async (req: Request<{}, {}, OrderTRquestBody>, 
     total,
   })
   await reduceStock(orderItems)
-  inValidateCache({ products: true, orders: true, admin: true })
+  inValidateCache({ products: true, orders: true, admin: true, userId: user })
   return customResponse({ statusCode: 201, message: COMMON_MESSAGES.CREATE.replace('{{name}}', 'Order'), res })
 })
 
@@ -34,8 +35,9 @@ export const getMyOrder = TryCatch(async (req, res, next) => {
   let orders = []
   if (nodeCache.has(key)) {
     orders = JSON.parse(nodeCache.get(key) as string)
+  } else {
+    orders = await OrderModel.find({ user: id })
   }
-  orders = await OrderModel.find({ user: id })
   nodeCache.set(key, JSON.stringify(orders))
   return customResponse({
     statusCode: 200,
@@ -50,7 +52,7 @@ export const getAllOrders = TryCatch(async (req, res, next) => {
   if (nodeCache.has(key)) {
     allOrders = JSON.parse(nodeCache.get(key) as string)
   } else {
-    allOrders = await OrderModel.find({})
+    allOrders = await OrderModel.find({}).populate('user', 'name')
     nodeCache.set(key, JSON.stringify(allOrders))
   }
 
@@ -72,5 +74,42 @@ export const getOrderDetails = TryCatch(async (req, res, next) => {
     res,
     data: orderDetails,
     message: COMMON_MESSAGES.FETCH_SUCCESSFUL.replace('{{name}}', 'Order'),
+  })
+})
+
+export const processOrder = TryCatch(async (req, res, next) => {
+  const { orderId } = req.params
+  const order = await OrderModel.findById(orderId)
+  if (!order)
+    return errorResponse({ message: ERROR_MESSAGES.NOT_FOUND.replace('{{name}}', 'Order'), statusCode: 404, next })
+  switch (order.status) {
+    case ESTATUS.PROCESSING:
+      order.status = ESTATUS.SHIPPED
+      break
+    case ESTATUS.SHIPPED:
+      order.status = ESTATUS.DELIVERED
+      break
+
+    default:
+      order.status = ESTATUS.DELIVERED
+      break
+  }
+  await order.save()
+  await inValidateCache({ admin: true, orders: true, products: false, userId: order.user })
+  return customResponse({
+    res,
+    message: COMMON_MESSAGES.GENERIC_SUCCESS.replace('{name}', 'Order').replace('{done}', 'Processed'),
+  })
+})
+export const deleteOrder = TryCatch(async (req, res, next) => {
+  const { orderId } = req.params
+  const order = await OrderModel.findById(orderId)
+  if (!order)
+    return errorResponse({ message: ERROR_MESSAGES.NOT_FOUND.replace('{{name}}', 'Order'), statusCode: 404, next })
+  await order.deleteOne()
+  await inValidateCache({ admin: true, orders: true, products: false, userId: order.user })
+  return customResponse({
+    res,
+    message: COMMON_MESSAGES.REMOVED_SUCCESSFUL.replace('{{name}}', 'Order'),
   })
 })

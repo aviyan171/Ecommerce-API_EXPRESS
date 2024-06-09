@@ -1,3 +1,5 @@
+import { ESTATUS } from '../enum/order.js'
+
 export type OrderItem = {
   name: string
   photo: string
@@ -22,4 +24,5 @@ export type OrderTRquestBody = {
   discount: number
   total: number
   orderItems: OrderItem[]
+  status?: ESTATUS
 }
