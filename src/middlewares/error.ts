@@ -7,6 +7,7 @@ import { ErrorHandler } from '../utils/utility-class.js'
 export const errorMiddleWare = (err: ErrorHandler, req: Request, res: Response, _next: NextFunction) => {
   err.message ||= ERROR_MESSAGES.INTERNAL_SERVER_ERROR
   err.statusCode ||= 500
+  if (err.name === 'CastError') err.message = ERROR_MESSAGES.INVALID.replace('{{name}}', 'Id')
   return customResponse({ res, message: err.message, statusCode: err.statusCode, success: false })
 }
 

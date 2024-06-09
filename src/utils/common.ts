@@ -6,6 +6,7 @@ import { nodeCache } from '../app.js'
 import { ProductModel } from '../models/Product.js'
 import { OrderItem } from '../types/order.js'
 import { ERROR_MESSAGES } from '../constants/errorMessages.js'
+import { OrderModel } from '../models/Order.js'
 
 /**
  * Helper function for converting array into object
@@ -51,10 +52,12 @@ export const inValidateCache = async ({
   products,
   admin,
   orders,
+  userId,
 }: {
   products?: boolean
   orders?: boolean
   admin?: boolean
+  userId?: string
 }) => {
   if (products) {
     const productsKeys: string[] = ['latest-products', 'categories']
@@ -67,6 +70,12 @@ export const inValidateCache = async ({
   if (admin) {
   }
   if (orders) {
+    const orderKeys: string[] = ['all-orders', `my-orders-${userId}`]
+    const orderIds = await OrderModel.find({}).select('_id')
+    orderIds.forEach((i) => {
+      orderKeys.push(`orders-${i._id}`)
+    })
+    nodeCache.del(orderKeys)
   }
 }
 

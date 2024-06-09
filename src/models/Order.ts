@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import { createModel } from '../utils/mongoose.js'
 import { convertObjectToArray } from '../utils/common.js'
 import { ESTATUS } from '../enum/order.js'
+import { OrderTRquestBody } from '../types/order.js'
 
 const orderSchema = new mongoose.Schema(
   {
@@ -54,7 +55,7 @@ const orderSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: convertObjectToArray({ data: ESTATUS, extract: 'values' }),
+      enum: [ESTATUS.DELIVERED, ESTATUS.PROCESSING, ESTATUS.SHIPPED],
       default: ESTATUS.PROCESSING,
     },
     orderItems: [
@@ -73,4 +74,4 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-export const OrderModel = createModel<typeof orderSchema>({ modelName: 'Order', schema: orderSchema })
+export const OrderModel = createModel<OrderTRquestBody>({ modelName: 'Order', schema: orderSchema })
