@@ -7,9 +7,10 @@ import NodeCache from 'node-cache'
 import { orderRouter } from './routes/orders.js'
 import { config } from 'dotenv'
 import morgan from 'morgan'
+import { paymentRouter } from './routes/payment.js'
 
 config({
-  path: './.env',
+  path: './.env'
 })
 
 const port = process.env.PORT
@@ -31,6 +32,7 @@ export const nodeCache = new NodeCache()
 app.use('/api/v1/user', userRouter)
 app.use('/api/v1/product', productRouter)
 app.use('/api/v1/order', orderRouter)
+app.use('/api/v1/payment', paymentRouter)
 
 //static
 app.use('/uploads', express.static('uploads'))

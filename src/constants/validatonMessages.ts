@@ -9,4 +9,6 @@ export const VALIDATION_MESSAGES = {
   ADD_DOB: 'Please enter date of birth',
   ALREADY_EXISTS: '{name} already exists',
   ADD_ALL_FIELDS: 'Please add all fields',
+  ENTER_COUPON: 'Please enter coupon code',
+  ENTER_DISCOUNT_AMOUNT: 'Please enter discount amount'
 }
