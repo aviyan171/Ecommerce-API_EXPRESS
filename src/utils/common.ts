@@ -25,23 +25,15 @@ export const convertObjectToArray = (args: { data: EnumType | Object; extract?: 
 export const customResponse = <T>({ success = true, statusCode = 200, res, message, data }: ResponseType<T>) => {
   return res.status(statusCode).json({
     success,
-    message,
-    ...(data && { data }),
+    ...(message && { message }),
+    ...(data && { data })
   })
 }
 
 /**
  * Helper function for throwing a error
  */
-export const errorResponse = ({
-  next,
-  message,
-  statusCode = 400,
-}: {
-  next: NextFunction
-  message: string
-  statusCode?: number
-}) => {
+export const errorResponse = ({ next, message, statusCode = 400 }: { next: NextFunction; message: string; statusCode?: number }) => {
   return next(new ErrorHandler(message, statusCode))
 }
 
@@ -52,7 +44,7 @@ export const inValidateCache = async ({
   products,
   admin,
   orders,
-  userId,
+  userId
 }: {
   products?: boolean
   orders?: boolean
@@ -62,7 +54,7 @@ export const inValidateCache = async ({
   if (products) {
     const productsKeys: string[] = ['latest-products', 'categories']
     const productId = await ProductModel.find({}).select('_id')
-    productId.forEach((i) => {
+    productId.forEach(i => {
       productsKeys.push(`products - ${i._id}`)
     })
     nodeCache.del(productsKeys)
@@ -72,7 +64,7 @@ export const inValidateCache = async ({
   if (orders) {
     const orderKeys: string[] = ['all-orders', `my-orders-${userId}`]
     const orderIds = await OrderModel.find({}).select('_id')
-    orderIds.forEach((i) => {
+    orderIds.forEach(i => {
       orderKeys.push(`orders-${i._id}`)
     })
     nodeCache.del(orderKeys)

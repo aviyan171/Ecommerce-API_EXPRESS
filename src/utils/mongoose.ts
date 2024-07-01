@@ -9,7 +9,7 @@ export const createModel = <T>({ modelName, schema }: { modelName: string; schem
 export const connectDB = async (uri: string) => {
   try {
     const res = await mongoose.connect(uri, {
-      dbName: 'Ecommerce_DB',
+      dbName: 'Ecommerce_DB'
     })
     console.log(`DB Connected to ${res.connection.host} successfully`)
   } catch (error) {
