@@ -25,7 +25,8 @@ export const newOrder = TryCatch(async (req: Request<{}, {}, OrderTRquestBody>, 
     total,
   })
   await reduceStock(orderItems)
-  inValidateCache({ products: true, orders: true, admin: true, userId: user })
+  void inValidateCache({ products: true, orders: true, admin: true, userId: user })
+
   return customResponse({ statusCode: 201, message: COMMON_MESSAGES.CREATE.replace('{{name}}', 'Order'), res })
 })
 
@@ -39,6 +40,7 @@ export const getMyOrder = TryCatch(async (req, res, next) => {
     orders = await OrderModel.find({ user: id })
   }
   nodeCache.set(key, JSON.stringify(orders))
+
   return customResponse({
     statusCode: 200,
     res,
@@ -46,7 +48,7 @@ export const getMyOrder = TryCatch(async (req, res, next) => {
     message: COMMON_MESSAGES.FETCH_SUCCESSFUL.replace('{{name}}', 'Your Order'),
   })
 })
-export const getAllOrders = TryCatch(async (req, res, next) => {
+export const getAllOrders = TryCatch(async (req, res) => {
   const key = 'all-orders'
   let allOrders = []
   if (nodeCache.has(key)) {
@@ -69,6 +71,7 @@ export const getOrderDetails = TryCatch(async (req, res, next) => {
   const orderDetails = await OrderModel.find({ _id: orderId }, { orderItems: 1 })
   if (!orderDetails)
     return errorResponse({ message: ERROR_MESSAGES.NOT_FOUND.replace('{{name}}', 'Order'), statusCode: 400, next })
+
   return customResponse({
     statusCode: 200,
     res,
@@ -96,6 +99,7 @@ export const processOrder = TryCatch(async (req, res, next) => {
   }
   await order.save()
   await inValidateCache({ admin: true, orders: true, products: false, userId: order.user })
+
   return customResponse({
     res,
     message: COMMON_MESSAGES.GENERIC_SUCCESS.replace('{name}', 'Order').replace('{done}', 'Processed'),
@@ -108,6 +112,7 @@ export const deleteOrder = TryCatch(async (req, res, next) => {
     return errorResponse({ message: ERROR_MESSAGES.NOT_FOUND.replace('{{name}}', 'Order'), statusCode: 404, next })
   await order.deleteOne()
   await inValidateCache({ admin: true, orders: true, products: false, userId: order.user })
+
   return customResponse({
     res,
     message: COMMON_MESSAGES.REMOVED_SUCCESSFUL.replace('{{name}}', 'Order'),

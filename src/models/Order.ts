@@ -1,6 +1,5 @@
 import mongoose from 'mongoose'
 import { createModel } from '../utils/mongoose.js'
-import { convertObjectToArray } from '../utils/common.js'
 import { ESTATUS } from '../enum/order.js'
 import { OrderTRquestBody } from '../types/order.js'
 
