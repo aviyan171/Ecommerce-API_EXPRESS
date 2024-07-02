@@ -8,6 +8,7 @@ import { orderRouter } from './routes/orders.js'
 import { config } from 'dotenv'
 import morgan from 'morgan'
 import { paymentRouter } from './routes/payment.js'
+import { statsRouter } from './routes/stats.js'
 
 config({
   path: './.env'
@@ -33,6 +34,7 @@ app.use('/api/v1/user', userRouter)
 app.use('/api/v1/product', productRouter)
 app.use('/api/v1/order', orderRouter)
 app.use('/api/v1/payment', paymentRouter)
+app.use('/api/v1/stats', statsRouter)
 
 //static
 app.use('/uploads', express.static('uploads'))

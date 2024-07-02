@@ -40,7 +40,7 @@ export const getAllCoupons = TryCatch(async (req, res, next) => {
 
 export const deleteCoupon = TryCatch(async (req, res, next) => {
   const { id } = req.params
-  const coupons = await CouponModal.deleteOne({ _id: id })
+  await CouponModal.deleteOne({ _id: id })
   return customResponse({
     message: REMOVED_SUCCESSFUL.replace('{{name}}', 'Coupons'),
     res,
