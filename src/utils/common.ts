@@ -93,6 +93,20 @@ export const isStockEmpty = async (orderItems: OrderItem[]) => {
 
 export const calculatePercentage = (thisMonth: number, lastMonth: number) => {
   if (lastMonth === 0) return thisMonth * 100
-  const percent = ((thisMonth - lastMonth) / lastMonth) * 100
+  const percent = (thisMonth / lastMonth) * 100
   return percent.toFixed(0)
+}
+
+export const getInventories = async (categories: string[], productCount: number) => {
+  const categoriesCountPromise = categories.map(category => ProductModel.countDocuments({ category }))
+  const categoriesCount = await Promise.all(categoriesCountPromise)
+
+  const categoryPercentage: Record<string, string>[] = []
+
+  categories.forEach((category, i) => {
+    categoryPercentage.push({
+      [category]: `${Math.round((categoriesCount[i] / productCount) * 100)} %`
+    })
+  })
+  return categoryPercentage
 }
