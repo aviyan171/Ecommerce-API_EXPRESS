@@ -1,4 +1,4 @@
-const today = new Date()
+export const today = new Date()
 
 export const thisMonth = {
   start: new Date(today.getFullYear(), today.getMonth(), 1),
@@ -7,4 +7,10 @@ export const thisMonth = {
 export const lastMonth = {
   start: new Date(today.getFullYear(), today.getMonth() - 1, 1),
   end: new Date(today.getFullYear(), today.getMonth(), 0)
+}
+
+export const sixMonthAgo = () => {
+  const currentDate = new Date()
+  currentDate.setMonth(today.getMonth() - 6)
+  return currentDate
 }

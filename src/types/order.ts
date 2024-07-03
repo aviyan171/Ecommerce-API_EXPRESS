@@ -26,3 +26,8 @@ export type OrderTRquestBody = {
   orderItems: OrderItem[]
   status?: ESTATUS
 }
+
+export type Order = OrderTRquestBody & {
+  createdAt: Date
+  updatedAt: Date
+}

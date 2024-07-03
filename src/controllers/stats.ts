@@ -1,10 +1,12 @@
 import { nodeCache } from '../app.js'
-import { lastMonth, thisMonth } from '../constants/stats.js'
+import { today } from '../constants/stats.js'
+import { EGender } from '../enum/user.js'
 import { TryCatch } from '../middlewares/error.js'
 import { OrderModel } from '../models/Order.js'
 import { ProductModel } from '../models/Product.js'
 import { UserModel } from '../models/User.js'
-import { lastMonthQuery, thisMonthQuery } from '../queries/stats.js'
+import { lastMonthQuery, lastSixMonthQuery, thisMonthQuery } from '../queries/stats.js'
+import { Order, OrderItem, OrderTRquestBody } from '../types/order.js'
 import { calculatePercentage, customResponse } from '../utils/common.js'
 
 export const getDashBoardStats = TryCatch(async (req, res, next) => {
@@ -21,6 +23,10 @@ export const getDashBoardStats = TryCatch(async (req, res, next) => {
     const productCountPromise = ProductModel.countDocuments()
     const userCountPromise = UserModel.countDocuments()
     const allOrderPromise = OrderModel.find({}).select('total')
+    const lastSixMonthOrderPromise = OrderModel.aggregate(lastSixMonthQuery)
+    const allCategoryPromise = ProductModel.distinct('category')
+    const totalFemalePromise = UserModel.countDocuments({ gender: EGender.FEMALE })
+    const latestTransactionPromise = OrderModel.find({}).select(['orderItems', 'discount', 'total', 'status']).limit(4)
 
     const [
       thisMonthProduct,
@@ -31,7 +37,11 @@ export const getDashBoardStats = TryCatch(async (req, res, next) => {
       lastMonthOrder,
       productCount,
       userCount,
-      allOrders
+      allOrders,
+      lastSixMonthOrder,
+      categories,
+      totalFemaleCount,
+      latestTransaction
     ] = await Promise.all([
       thisMonthProductPromise,
       lastMonthProductPromise,
@@ -41,7 +51,11 @@ export const getDashBoardStats = TryCatch(async (req, res, next) => {
       lastMonthOrderPromise,
       productCountPromise,
       userCountPromise,
-      allOrderPromise
+      allOrderPromise,
+      lastSixMonthOrderPromise,
+      allCategoryPromise,
+      totalFemalePromise,
+      latestTransactionPromise
     ])
 
     const thisMonthRevenue = thisMonthOrder.reduce((acc, curr) => acc + (curr?.total || 0), 0)
@@ -63,7 +77,48 @@ export const getDashBoardStats = TryCatch(async (req, res, next) => {
       order: allOrders.length
     }
 
-    stats = { percent, count }
+    const orderMonthCounts = new Array(6).fill(0)
+    const orderMonthlyRevenue = new Array(6).fill(0)
+
+    for (const order of lastSixMonthOrder as Order[]) {
+      const creationDate = order.createdAt
+      const monthDiff = today.getMonth() - creationDate.getMonth()
+
+      if (monthDiff < 6) {
+        orderMonthCounts[6 - monthDiff - 1] += 1
+        orderMonthlyRevenue[6 - monthDiff - 1] += order.total
+      }
+    }
+
+    const categoriesCountPromise = categories.map(category => ProductModel.countDocuments({ category }))
+    const categoriesCount = await Promise.all(categoriesCountPromise)
+
+    const categoryPercentage: Record<string, string>[] = []
+
+    categories.forEach((category, i) => {
+      categoryPercentage.push({
+        [category]: `${Math.round((categoriesCount[i] / productCount) * 100)} %`
+      })
+    })
+
+    const genderRatio = {
+      female: totalFemaleCount,
+      male: userCount - totalFemaleCount
+    }
+
+    stats = {
+      percent,
+      latestTransaction,
+      count,
+      categoryPercentage,
+      genderRatio,
+      chart: {
+        order: orderMonthCounts,
+        revenue: orderMonthlyRevenue
+      }
+    }
+
+    nodeCache.set('admin-stats', JSON.stringify(stats))
   }
   return customResponse({
     res,
