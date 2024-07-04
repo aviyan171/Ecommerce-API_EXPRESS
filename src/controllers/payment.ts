@@ -1,3 +1,4 @@
+import { stripe } from '../app.js'
 import { COMMON_MESSAGES } from '../constants/commonMessages.js'
 import { ERROR_MESSAGES } from '../constants/errorMessages.js'
 import { TryCatch } from '../middlewares/error.js'
@@ -7,6 +8,21 @@ import { customResponse, errorResponse } from '../utils/common.js'
 const { CREATE, FETCH_SUCCESSFUL, REMOVED_SUCCESSFUL } = COMMON_MESSAGES
 const { INVALID } = ERROR_MESSAGES
 
+export const createPayment = TryCatch(async (req, res) => {
+  const { amount } = req.body
+
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: Number(amount) * 100,
+    currency: 'npr'
+  })
+  return customResponse({
+    data: {
+      clientSecret: paymentIntent.client_secret
+    },
+    statusCode: 201,
+    res
+  })
+})
 export const createCoupon = TryCatch(async (req, res) => {
   const { code, amount } = req.body
   await CouponModal.create({ code, amount })
