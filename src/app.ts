@@ -9,6 +9,7 @@ import { config } from 'dotenv'
 import morgan from 'morgan'
 import { paymentRouter } from './routes/payment.js'
 import { statsRouter } from './routes/stats.js'
+import Stripe from 'stripe'
 
 config({
   path: './.env'
@@ -16,6 +17,7 @@ config({
 
 const port = process.env.PORT
 const mongoUri = process.env.MONGO_URI as string
+const stripeKey = process.env.STRIPE_KEY as string
 
 const app = express()
 
@@ -25,6 +27,9 @@ app.use(morgan('dev'))
 
 //connect DB
 connectDB(mongoUri)
+
+//stripe
+export const stripe = new Stripe(stripeKey)
 
 //node-cache
 export const nodeCache = new NodeCache()
