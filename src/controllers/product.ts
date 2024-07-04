@@ -20,7 +20,7 @@ export const addNewProduct: ControllerType = TryCatch(async (req: Request<{}, {}
   if (!photos?.length) return errorResponse({ next, message: ADD_PHOTO })
 
   if (!name || !price || !stock || !category) {
-    photos.forEach((i) => {
+    photos.forEach(i => {
       rm(i.path, () => console.log(REMOVED_SUCCESSFUL.replace('{{name}}', 'Photos')))
     })
     return errorResponse({ next, message: ADD_ALL_FIELDS })
@@ -31,17 +31,17 @@ export const addNewProduct: ControllerType = TryCatch(async (req: Request<{}, {}
     price,
     stock,
     category: category.toLowerCase(),
-    photo: photos.map((i) => i.path),
+    photo: photos.map(i => i.path)
   }
   const newProducts = await ProductModel.create(data)
 
-  await inValidateCache({ products: true })
+  await inValidateCache({ products: true, admin: true })
 
   return customResponse<ProductRequestBody>({
     statusCode: 201,
     message: CREATE.replace('{{name}}', 'Product'),
     res,
-    data: newProducts,
+    data: newProducts
   })
 })
 
@@ -61,7 +61,7 @@ export const getLatestProduct = ({ isAdmin }: { isAdmin: boolean }): ControllerT
       statusCode: 200,
       message: FETCH_SUCCESSFUL.replace('{{name}}', 'Latest product'),
       res,
-      data: products,
+      data: products
     })
   })
 
@@ -77,7 +77,7 @@ export const getAllCategories: ControllerType = TryCatch(async (_req, res) => {
   return customResponse({
     res,
     data: categories,
-    message: FETCH_SUCCESSFUL.replace('{{name}}', 'Categories'),
+    message: FETCH_SUCCESSFUL.replace('{{name}}', 'Categories')
   })
 })
 
@@ -96,7 +96,7 @@ export const getProductDetails: ControllerType = TryCatch(async (req, res, next)
   return customResponse({
     message: FETCH_SUCCESSFUL.replace('{{name}}', 'Products'),
     res,
-    data: productDetails,
+    data: productDetails
   })
 })
 
@@ -110,12 +110,12 @@ export const updateProduct: ControllerType = TryCatch(async (req, res, next) => 
   if (!product) return errorResponse({ next, message: INVALID.replace('{{name}}', 'Id') })
 
   if (photos?.length) {
-    product.photo.forEach((i) => {
+    product.photo.forEach(i => {
       rm(i, () => console.log(REMOVED_SUCCESSFUL.replace('{{name}}', 'Old Photos')))
     })
-    product!.photo = photos.map((p) => p.path)
+    product!.photo = photos.map(p => p.path)
   }
-  ;(Object.keys(updatedFields) as (keyof Product)[]).forEach((key) => {
+  ;(Object.keys(updatedFields) as (keyof Product)[]).forEach(key => {
     const value = updatedFields[key]
     if (value) {
       ;(product as any)[key] = value
@@ -123,31 +123,31 @@ export const updateProduct: ControllerType = TryCatch(async (req, res, next) => 
   })
   await product.save()
 
-  await inValidateCache({ products: true })
+  await inValidateCache({ products: true, admin: true })
 
   return customResponse<ProductRequestBody>({
     statusCode: 200,
     message: UPDATE_SUCCESSFUL.replace('{{name}}', 'Product'),
     res,
-    data: product,
+    data: product
   })
 })
 
 export const deleteProduct = TryCatch(async (req, res, next) => {
   const product = await ProductModel.findById(req.params.id)
   if (!product) return errorResponse({ next, message: NOT_FOUND.replace('{{name}}', 'Product') })
-  product.photo.forEach((i) => {
+  product.photo.forEach(i => {
     rm(i, () => console.log(REMOVED_SUCCESSFUL.replace('{{name}}', 'Old Photos')))
   })
   await ProductModel.deleteOne()
 
-  await inValidateCache({ products: true })
+  await inValidateCache({ products: true, admin: true })
 
   return customResponse({
     statusCode: 200,
     message: REMOVED_SUCCESSFUL.replace('{{name}}', 'Product'),
     res,
-    data: { id: product.id },
+    data: { id: product.id }
   })
 })
 
@@ -160,12 +160,12 @@ export const searchProducts = TryCatch(async (req: Request<{}, {}, {}, ProductSe
   if (keyword) {
     baseQuery.name = {
       $regex: keyword,
-      $options: 'i',
+      $options: 'i'
     }
   }
   if (price) {
     baseQuery.price = {
-      $lte: Number(price),
+      $lte: Number(price)
     }
   }
   if (category) baseQuery.category = category
@@ -175,7 +175,7 @@ export const searchProducts = TryCatch(async (req: Request<{}, {}, {}, ProductSe
       .sort(sort ? { price: sort === 'asc' ? 1 : -1 } : undefined)
       .limit(limit)
       .skip(skip),
-    ProductModel.find(baseQuery),
+    ProductModel.find(baseQuery)
   ])
   const totalPage = Math.ceil(filteredOnlyProduct.length / limit)
   return customResponse({
@@ -183,7 +183,7 @@ export const searchProducts = TryCatch(async (req: Request<{}, {}, {}, ProductSe
     message: FETCH_SUCCESSFUL.replace('{{name}}', 'Products'),
     data: {
       totalPage,
-      rows: products,
-    },
+      rows: products
+    }
   })
 })

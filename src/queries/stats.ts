@@ -1,5 +1,5 @@
 import { PipelineStage } from 'mongoose'
-import { lastMonth, sixMonthAgo, thisMonth } from '../constants/stats.js'
+import { lastMonth, sixMonthAgo, thisMonth, twelveMonthAgo } from '../constants/stats.js'
 
 export const thisMonthQuery = [
   {
@@ -22,6 +22,15 @@ export const lastMonthQuery = [
 export const lastSixMonthQuery = [
   {
     $match: { createdAt: { $gte: sixMonthAgo(), $lte: thisMonth.end } }
+  },
+  {
+    $sort: { createdAt: 1 }
+  }
+] as PipelineStage[]
+
+export const lastTwelveMonthQuery = [
+  {
+    $match: { createdAt: { $gte: twelveMonthAgo(), $lte: thisMonth.end } }
   },
   {
     $sort: { createdAt: 1 }

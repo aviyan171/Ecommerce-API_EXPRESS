@@ -14,3 +14,8 @@ export const sixMonthAgo = () => {
   currentDate.setMonth(today.getMonth() - 6)
   return currentDate
 }
+export const twelveMonthAgo = () => {
+  const currentDate = new Date()
+  currentDate.setMonth(today.getMonth() - 12)
+  return currentDate
+}
