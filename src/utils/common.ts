@@ -1,12 +1,14 @@
 import { NextFunction } from 'express'
 import { EnumType } from 'typescript'
-import { ResponseType } from '../types/common.js'
+import { ResponseType, genericDocument } from '../types/common.js'
 import { ErrorHandler } from './utility-class.js'
 import { nodeCache } from '../app.js'
 import { ProductModel } from '../models/Product.js'
-import { OrderItem } from '../types/order.js'
+import { Order, OrderItem } from '../types/order.js'
 import { ERROR_MESSAGES } from '../constants/errorMessages.js'
 import { OrderModel } from '../models/Order.js'
+import { today } from '../constants/stats.js'
+import { Document } from 'mongoose'
 
 /**
  * Helper function for converting array into object
@@ -60,6 +62,7 @@ export const inValidateCache = async ({
     nodeCache.del(productsKeys)
   }
   if (admin) {
+    nodeCache.del(['admin-stats', 'admin-line-charts', 'admin-bar-charts', 'admin-pie-charts'])
   }
   if (orders) {
     const orderKeys: string[] = ['all-orders', `my-orders-${userId}`]
@@ -109,4 +112,30 @@ export const getInventories = async (categories: string[], productCount: number)
     })
   })
   return categoryPercentage
+}
+
+export const getChartData = async ({
+  length,
+  docArr,
+  properties
+}: {
+  length: number
+  docArr: genericDocument<{ createdAt: Date; total?: number; discount?: number }>[]
+  properties?: 'discount' | 'total'
+}) => {
+  const data: number[] = new Array(length).fill(0)
+
+  for (const i of docArr) {
+    const creationDate = i.createdAt
+
+    const monthDiff = (today.getMonth() - creationDate.getMonth() + 12) % 12
+
+    if (monthDiff < length) {
+      if (properties) data[length - monthDiff - 1] += i[properties]!
+      else {
+        data[length - monthDiff - 1] += 1
+      }
+    }
+  }
+  return { data }
 }

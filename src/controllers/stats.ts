@@ -1,34 +1,23 @@
 import { nodeCache } from '../app.js'
-import { today } from '../constants/stats.js'
-import { ESTATUS } from '../enum/order.js'
-import { EGender, EROLE } from '../enum/user.js'
 import { TryCatch } from '../middlewares/error.js'
-import { OrderModel } from '../models/Order.js'
-import { ProductModel } from '../models/Product.js'
-import { UserModel } from '../models/User.js'
-import { lastMonthQuery, lastSixMonthQuery, thisMonthQuery } from '../queries/stats.js'
+
 import { Order } from '../types/order.js'
-import { calculatePercentage, customResponse, getInventories } from '../utils/common.js'
+import { TUser } from '../types/user.js'
+import { calculatePercentage, customResponse, getChartData, getInventories } from '../utils/common.js'
+import {
+  getAllDashboardStatsPromises,
+  getAllPieChartStatsPromises,
+  getRevenueDistribution,
+  getUserAgeGroup,
+  getallBarChartsPromises,
+  getallLineChartsPromises
+} from '../utils/stats.js'
 
 export const getDashBoardStats = TryCatch(async (req, res, next) => {
   let stats
 
   if (nodeCache.has('admin-stats')) stats = JSON.parse(nodeCache.get('admin-stats') as string)
   else {
-    const thisMonthProductPromise = ProductModel.aggregate(thisMonthQuery)
-    const lastMonthProductPromise = ProductModel.aggregate(lastMonthQuery)
-    const thisMonthUserPromise = UserModel.aggregate(thisMonthQuery)
-    const lastMonthUserPromise = UserModel.aggregate(lastMonthQuery)
-    const thisMonthOrderPromise = OrderModel.aggregate(thisMonthQuery)
-    const lastMonthOrderPromise = OrderModel.aggregate(lastMonthQuery)
-    const productCountPromise = ProductModel.countDocuments()
-    const userCountPromise = UserModel.countDocuments()
-    const allOrderPromise = OrderModel.find({}).select('total')
-    const lastSixMonthOrderPromise = OrderModel.aggregate(lastSixMonthQuery)
-    const allCategoryPromise = ProductModel.distinct('category')
-    const totalFemalePromise = UserModel.countDocuments({ gender: EGender.FEMALE })
-    const latestTransactionPromise = OrderModel.find({}).select(['orderItems', 'discount', 'total', 'status']).limit(4)
-
     const [
       thisMonthProduct,
       lastMonthProduct,
@@ -43,24 +32,10 @@ export const getDashBoardStats = TryCatch(async (req, res, next) => {
       categories,
       totalFemaleCount,
       latestTransaction
-    ] = await Promise.all([
-      thisMonthProductPromise,
-      lastMonthProductPromise,
-      thisMonthUserPromise,
-      lastMonthUserPromise,
-      thisMonthOrderPromise,
-      lastMonthOrderPromise,
-      productCountPromise,
-      userCountPromise,
-      allOrderPromise,
-      lastSixMonthOrderPromise,
-      allCategoryPromise,
-      totalFemalePromise,
-      latestTransactionPromise
-    ])
+    ] = await getAllDashboardStatsPromises()
 
-    const thisMonthRevenue = thisMonthOrder.reduce((acc, curr) => acc + (curr?.total || 0), 0)
-    const lastMonthRevenue = lastMonthOrder.reduce((acc, curr) => acc + (curr?.total || 0), 0)
+    const thisMonthRevenue = (thisMonthOrder as Order[]).reduce((acc, curr) => acc + (curr?.total || 0), 0)
+    const lastMonthRevenue = (lastMonthOrder as Order[]).reduce((acc, curr) => acc + (curr?.total || 0), 0)
 
     const percent = {
       revenue: `${calculatePercentage(thisMonthRevenue, lastMonthRevenue)} %`,
@@ -69,7 +44,7 @@ export const getDashBoardStats = TryCatch(async (req, res, next) => {
       order: `${calculatePercentage(thisMonthOrder.length, lastMonthOrder.length)} %`
     }
 
-    const totalRevenue = allOrders.reduce((acc, curr) => acc + (curr?.total || 0), 0)
+    const totalRevenue = (allOrders as Order[]).reduce((acc, curr) => acc + (curr?.total || 0), 0)
 
     const count = {
       revenue: totalRevenue,
@@ -78,18 +53,8 @@ export const getDashBoardStats = TryCatch(async (req, res, next) => {
       order: allOrders.length
     }
 
-    const orderMonthCounts = new Array(6).fill(0)
-    const orderMonthlyRevenue = new Array(6).fill(0)
-
-    for (const order of lastSixMonthOrder as Order[]) {
-      const creationDate = order.createdAt
-      const monthDiff = today.getMonth() - creationDate.getMonth()
-
-      if (monthDiff < 6) {
-        orderMonthCounts[6 - monthDiff - 1] += 1
-        orderMonthlyRevenue[6 - monthDiff - 1] += order.total
-      }
-    }
+    const orderMonthCounts = (await getChartData({ length: 6, docArr: lastSixMonthOrder })).data
+    const orderMonthlyRevenue = (await getChartData({ length: 6, docArr: lastSixMonthOrder, properties: 'total' })).data
 
     const categoryPercentage = await getInventories(categories, productCount)
 
@@ -134,20 +99,13 @@ export const getPieChartStats = TryCatch(async (req, res, next) => {
       allUsers,
       adminUsers,
       customerUsers
-    ] = await Promise.all([
-      OrderModel.countDocuments({ status: ESTATUS.PROCESSING }),
-      OrderModel.countDocuments({ status: ESTATUS.SHIPPED }),
-      OrderModel.countDocuments({ status: ESTATUS.DELIVERED }),
-      ProductModel.distinct('category'),
-      ProductModel.countDocuments(),
-      ProductModel.countDocuments({ stock: 0 }),
-      OrderModel.find({}).select(['total', 'discount', 'subtotal', 'tax', 'shippingCharges']),
-      UserModel.find({}).select(['dob']),
-      UserModel.countDocuments({ role: EROLE.ADMIN }),
-      UserModel.countDocuments({ role: EROLE.USER })
-    ])
+    ] = await getAllPieChartStatsPromises()
 
     const productCategoriesRatio = await getInventories(categories, productCount)
+
+    const revenueDistribution = getRevenueDistribution(allOrders as Order[])
+
+    const userAgeGroup = getUserAgeGroup(allUsers as TUser[])
 
     const orderFulFillment = {
       processing: processingOrder,
@@ -163,28 +121,6 @@ export const getPieChartStats = TryCatch(async (req, res, next) => {
     const users = {
       admin: adminUsers,
       customer: customerUsers
-    }
-
-    const grossIncome = allOrders.reduce((accumulator, currentValue) => accumulator + (currentValue?.total || 0), 0)
-    const discount = allOrders.reduce((accumulator, currentValue) => accumulator + (currentValue?.discount || 0), 0)
-    const productionCost = allOrders.reduce((accumulator, currentValue) => accumulator + (currentValue?.shippingCharges || 0), 0)
-    const burnt = allOrders.reduce((accumulator, currentValue) => accumulator + (currentValue?.tax || 0), 0)
-    const marketingCost = Math.round(grossIncome * (30 / 100))
-    const netMargin = grossIncome - discount - productionCost - burnt - marketingCost
-
-    const revenueDistribution = {
-      grossIncome,
-      discount,
-      productionCost,
-      burnt,
-      marketingCost,
-      netMargin
-    }
-
-    const userAgeGroup = {
-      teen: allUsers.filter(i => i.age <= 20).length,
-      adult: allUsers.filter(i => i.age > 20 && i.age <= 40).length,
-      old: allUsers.filter(i => i.age > 40).length
     }
 
     charts = {
@@ -204,6 +140,58 @@ export const getPieChartStats = TryCatch(async (req, res, next) => {
   })
 })
 
-export const getBarStats = TryCatch(async (req, res, next) => {})
+export const getBarStats = TryCatch(async (req, res, next) => {
+  let charts
 
-export const getLineChartStats = TryCatch(async (req, res, next) => {})
+  const key = 'admin-bar-charts'
+
+  if (nodeCache.has(key)) charts = JSON.parse(nodeCache.get(key) as string)
+  else {
+    const [products, users, orders] = await getallBarChartsPromises()
+
+    const productCounts = await getChartData({ length: 6, docArr: products })
+    const userCounts = await getChartData({ length: 6, docArr: users })
+    const orderCounts = await getChartData({ length: 12, docArr: orders })
+
+    charts = {
+      users: userCounts.data,
+      products: productCounts.data,
+      orders: orderCounts.data
+    }
+    nodeCache.set(key, JSON.stringify(charts))
+  }
+
+  return customResponse({
+    res,
+    data: charts
+  })
+})
+
+export const getLineChartStats = TryCatch(async (req, res, next) => {
+  let charts
+
+  const key = 'admin-line-charts'
+
+  if (nodeCache.has(key)) charts = JSON.parse(nodeCache.get(key) as string)
+  else {
+    const [products, users, orders] = await getallLineChartsPromises()
+
+    const productCounts = await getChartData({ length: 12, docArr: products })
+    const userCounts = await getChartData({ length: 12, docArr: users })
+    const discount = (await getChartData({ length: 12, docArr: orders, properties: 'discount' })).data
+    const revenue = (await getChartData({ length: 12, docArr: orders, properties: 'total' })).data
+
+    charts = {
+      users: userCounts.data,
+      products: productCounts.data,
+      discount,
+      revenue
+    }
+    nodeCache.set(key, JSON.stringify(charts))
+  }
+
+  return customResponse({
+    res,
+    data: charts
+  })
+})
