@@ -10,6 +10,7 @@ import morgan from 'morgan'
 import { paymentRouter } from './routes/payment.js'
 import { statsRouter } from './routes/stats.js'
 import Stripe from 'stripe'
+import cors from 'cors'
 
 config({
   path: './.env'
@@ -24,6 +25,7 @@ const app = express()
 //middleware
 app.use(express.json()) //used for accessing json data
 app.use(morgan('dev'))
+app.use(cors())
 
 //connect DB
 connectDB(mongoUri)
