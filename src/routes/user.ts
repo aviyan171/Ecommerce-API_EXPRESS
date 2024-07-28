@@ -6,6 +6,6 @@ const userRouter = express.Router()
 
 userRouter.post('/new', newUser)
 userRouter.get('/all', isAdmin('get all user'), getAllUser)
-userRouter.route('/:id').get(isAdmin('get particular user'), getUserById).delete(isAdmin('delete user'), deleteUser)
+userRouter.route('/:id').get(getUserById).delete(isAdmin('delete user'), deleteUser)
 
 export { userRouter }
