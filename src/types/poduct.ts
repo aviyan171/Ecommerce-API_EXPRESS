@@ -8,11 +8,13 @@ export type Product = {
   price: number
   stock: number
   category: string
+  description: string
 }
 export type ProductRequestBody = Omit<TNewUserRequestBody, 'dob' | 'gender' | 'email' | '_id' | 'photo'> & {
   stock: number
   category: string
   price: number
+  description: string
 }
 
 export type ProductSearchQuery = {

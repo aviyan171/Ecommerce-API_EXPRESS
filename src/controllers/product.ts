@@ -15,7 +15,7 @@ const { ADD_PHOTO, ADD_ALL_FIELDS } = VALIDATION_MESSAGES
 const { INVALID, NOT_FOUND } = ERROR_MESSAGES
 
 export const addNewProduct: ControllerType = TryCatch(async (req: Request<{}, {}, ProductRequestBody>, res, next) => {
-  const { name, price, stock, category } = req.body
+  const { name, price, stock, category, description } = req.body
   const photos = req.files as Express.Multer.File[]
   if (!photos?.length) return errorResponse({ next, message: ADD_PHOTO })
 
@@ -31,7 +31,8 @@ export const addNewProduct: ControllerType = TryCatch(async (req: Request<{}, {}
     price,
     stock,
     category: category.toLowerCase(),
-    photo: photos.map(i => i.path)
+    photo: photos.map(i => i.path),
+    description
   }
   const newProducts = await ProductModel.create(data)
 

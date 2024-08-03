@@ -6,6 +6,7 @@ export const VALIDATION_MESSAGES = {
   ADD_PRICE: 'Please insert price',
   ADD_STOCK: 'Please insert stock',
   ADD_CATEGORY: 'Please insert category',
+  ADD_DESCRIPTION: 'Please add description',
   ADD_DOB: 'Please enter date of birth',
   ALREADY_EXISTS: '{name} already exists',
   ADD_ALL_FIELDS: 'Please add all fields',

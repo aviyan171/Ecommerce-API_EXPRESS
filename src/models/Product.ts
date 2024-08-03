@@ -9,26 +9,30 @@ const productSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, ADD_NAME],
+      required: [true, ADD_NAME]
     },
     photo: {
       type: Array,
-      required: [true, ADD_PHOTO],
+      required: [true, ADD_PHOTO]
     },
     price: {
       type: Number,
-      required: [true, ADD_PRICE],
+      required: [true, ADD_PRICE]
     },
     stock: {
       type: Number,
-      required: [true, ADD_STOCK],
+      required: [true, ADD_STOCK]
     },
     category: {
       type: String,
       required: [true, ADD_CATEGORY],
       lowercase: true,
-      trim: true,
+      trim: true
     },
+    description: {
+      type: String,
+      required: [true, ADD_CATEGORY]
+    }
   },
   { timestamps: true }
 )
