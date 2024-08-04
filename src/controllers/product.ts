@@ -171,20 +171,21 @@ export const searchProducts = TryCatch(async (req: Request<{}, {}, {}, ProductSe
   }
   if (category) baseQuery.category = category
 
-  const [products, filteredOnlyProduct] = await Promise.all([
+  const [filteredOnlyProduct, products] = await Promise.all([
     ProductModel.find(baseQuery)
-      .sort(sort ? { price: sort === 'asc' ? 1 : -1 } : undefined)
+      .sort(sort ? { createdAt: sort === 'oldest' ? 1 : -1 } : undefined)
       .limit(limit)
       .skip(skip),
     ProductModel.find(baseQuery)
   ])
-  const totalPage = Math.ceil(filteredOnlyProduct.length / limit)
+  const totalPage = Math.ceil(products.length / limit)
   return customResponse({
     res,
     message: FETCH_SUCCESSFUL.replace('{{name}}', 'Products'),
     data: {
       totalPage,
-      rows: products
+      rows: filteredOnlyProduct,
+      count: products.length
     }
   })
 })
