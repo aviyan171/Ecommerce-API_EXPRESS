@@ -8,54 +8,62 @@ const orderSchema = new mongoose.Schema(
     shippingInfo: {
       address: {
         type: String,
-        required: true,
+        required: true
       },
       city: {
         type: String,
-        required: true,
+        required: true
       },
       state: {
         type: String,
-        required: true,
+        required: true
       },
       country: {
         type: String,
-        required: true,
+        required: true
       },
       pinCode: {
         type: Number,
-        required: true,
+        required: true
       },
+      email: {
+        type: String,
+        required: true
+      },
+      phoneNo: {
+        type: Number,
+        required: true
+      }
     },
     user: {
       type: String,
       ref: 'User',
-      required: true,
+      required: true
     },
     subtotal: {
       type: Number,
-      required: true,
+      required: true
     },
     tax: {
       type: Number,
-      required: true,
+      required: true
     },
     shippingCharges: {
       type: Number,
-      required: true,
+      required: true
     },
     discount: {
       type: Number,
-      required: true,
+      required: true
     },
     total: {
       type: Number,
-      required: true,
+      required: true
     },
     status: {
       type: String,
       enum: [ESTATUS.DELIVERED, ESTATUS.PROCESSING, ESTATUS.SHIPPED],
-      default: ESTATUS.PROCESSING,
+      default: ESTATUS.PROCESSING
     },
     orderItems: [
       {
@@ -65,10 +73,10 @@ const orderSchema = new mongoose.Schema(
         quantity: Number,
         productId: {
           type: mongoose.Types.ObjectId,
-          ref: 'Product',
-        },
-      },
-    ],
+          ref: 'Product'
+        }
+      }
+    ]
   },
   { timestamps: true }
 )

@@ -13,6 +13,8 @@ export type ShippingInfo = {
   state: string
   country: string
   pinCode: number
+  email: string
+  phoneNo: number
 }
 
 export type OrderTRquestBody = {
