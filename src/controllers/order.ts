@@ -25,7 +25,7 @@ export const newOrder = TryCatch(async (req: Request<{}, {}, OrderTRquestBody>, 
     total
   })
   await reduceStock(orderItems)
-  void inValidateCache({ products: true, orders: true, admin: true, userId: user })
+  await inValidateCache({ products: true, orders: true, admin: true, userId: user })
 
   return customResponse({ statusCode: 201, message: COMMON_MESSAGES.CREATE.replace('{{name}}', 'Order'), res })
 })

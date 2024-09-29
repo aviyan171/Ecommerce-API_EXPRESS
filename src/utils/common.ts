@@ -57,7 +57,7 @@ export const inValidateCache = async ({
     const productsKeys: string[] = ['latest-products', 'categories']
     const productId = await ProductModel.find({}).select('_id')
     productId.forEach(i => {
-      productsKeys.push(`products - ${i._id}`)
+      productsKeys.push(`products-${i._id}`)
     })
     nodeCache.del(productsKeys)
   }
@@ -80,6 +80,8 @@ export const reduceStock = async (orderItems: OrderItem[]) => {
     const product = await ProductModel.findById(order.productId)
     if (!product) throw new ErrorHandler(ERROR_MESSAGES.NOT_FOUND.replace('{{name}}', 'Product'), 400)
     product.stock = product.stock - order.quantity
+    // await inValidateCache({ products: true, orders: true, admin: true })
+
     await product.save()
   }
 }
