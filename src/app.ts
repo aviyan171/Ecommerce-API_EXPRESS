@@ -27,9 +27,9 @@ app.use(express.json()) //used for accessing json data
 app.use(morgan('dev'))
 app.use(cors())
 
+console.log('sdsdsdsd')
 //connect DB
 connectDB(mongoUri)
-
 //stripe
 export const stripe = new Stripe(stripeKey)
 

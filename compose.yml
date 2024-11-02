@@ -1,0 +1,23 @@
+version: '3'
+services:
+  ecommerce-api-express:
+    image: ecommerce-api
+    restart: always
+    build: .
+    volumes:
+      - .:/app
+      # - /app/node_modules
+    ports:
+      - 4000:4000
+    environment:
+      - MONGO_URI=${MONGO_URI}
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo
+    restart: always
+    volumes:
+      - mongo-data:/data/db
+volumes:
+  mongo-data:
